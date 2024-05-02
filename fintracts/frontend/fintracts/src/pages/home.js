@@ -64,6 +64,8 @@ const Home = () => {
           )}
           {role === "Bank" ? (
             <a href="/create-bank-account">Create Bank Account</a>
+          ) : role === "ForexBank" ? (
+            <a href="/forex-pending-txns">Pending Transactions</a>
           ) : null}
           <a onClick={() => Logout()}>Logout</a>
         </div>

@@ -286,36 +286,48 @@ func (s *SmartContract) CreateForexBank(ctx contractapi.TransactionContextInterf
 	return nil
 }
 
-func (s *SmartContract) BankToCentralBankTransaction(ctx contractapi.TransactionContextInterface, transactionID string) error {
+func (s *SmartContract) BankToCentralBankTransaction(ctx contractapi.TransactionContextInterface, transactionID string,payerid string,amtrcv float64,payercbid string,payeeid string,amtorg float64, payeecbid string, date string, stat string, contractid string) error {
 	// Get the transaction from the pendingTransaction collection
-	transactionAsBytes, err := ctx.GetStub().GetPrivateData(pendingTransactionCollection, transactionID)
-	if err != nil {
-		return fmt.Errorf("failed to get transaction from pendingTransaction collection: %v", err)
-	}
-	if transactionAsBytes == nil {
-		return fmt.Errorf("transaction not found in pendingTransaction collection: %s", transactionID)
+	// transactionAsBytes, err := ctx.GetStub().GetPrivateData(pendingTransactionCollection, transactionID)
+	// if err != nil {
+	// 	return fmt.Errorf("failed to get transaction from pendingTransaction collection: %v", err)
+	// }
+	// if transactionAsBytes == nil {
+	// 	return fmt.Errorf("transaction not found in pendingTransaction collection: %s", transactionID)
+	// }
+
+	// // Unmarshal the transaction
+	// var transaction Transaction
+	// err = json.Unmarshal(transactionAsBytes, &transaction)
+	// if err != nil {
+	// 	return fmt.Errorf("failed to unmarshal transaction: %v", err)
+	// }
+
+	transaction := Transaction{
+		TransactionId: transactionID,
+		PayerID: payerid,
+		AmountReceived: amtrcv,
+		PayerCentralBankID: payercbid,
+		PayeeID: payeeid,
+		AmountOriginal: amtorg,
+		PayeeCentralBankID: payeecbid,
+		PaymentDate: date,
+		Status: stat,
+		ContractID: contractid,
 	}
 
-	// Unmarshal the transaction
-	var transaction Transaction
-	err = json.Unmarshal(transactionAsBytes, &transaction)
-	if err != nil {
-		return fmt.Errorf("failed to unmarshal transaction: %v", err)
-	}
-
-	
 
 	
 
 	// Send money from the payer's bank account to the central bank
-	err = sendMoneyToCentralBank(ctx, transaction.PayerID, transaction.PayerCentralBankID, transaction.AmountReceived)
+	err := sendMoneyToCentralBank(ctx, transaction.PayerID, transaction.PayerCentralBankID, transaction.AmountReceived)
 	if err != nil {
 		return fmt.Errorf("failed to send money to central bank: %v", err)
 	}
 
 	// Update the transaction status
 	transaction.Status = "Reached Central Bank of your country"
-	transactionAsBytes, err = json.Marshal(transaction)
+	transactionAsBytes, err := json.Marshal(transaction)
 	if err != nil {
 		return fmt.Errorf("failed to marshal transaction: %v", err)
 	}
@@ -333,10 +345,10 @@ func (s *SmartContract) BankToCentralBankTransaction(ctx contractapi.Transaction
 	}
 
 	// Delete the transaction from the pendingTransaction collection
-	err = ctx.GetStub().DelPrivateData(pendingTransactionCollection, transactionID)
-	if err != nil {
-		return fmt.Errorf("failed to delete transaction from pendingTransaction collection: %v", err)
-	}
+	// err = ctx.GetStub().DelPrivateData(pendingTransactionCollection, transactionID)
+	// if err != nil {
+	// 	return fmt.Errorf("failed to delete transaction from pendingTransaction collection: %v", err)
+	// }
 
 	return nil
 }
@@ -395,7 +407,7 @@ func sendMoneyToCentralBank(ctx contractapi.TransactionContextInterface, bankAcc
 		return fmt.Errorf("failed to marshal central bank account: %v", err)
 	}
 
-	err = ctx.GetStub().PutPrivateData(bankAccountCollection, centralBank.ID, centralBankAccountAsBytes)
+	err = ctx.GetStub().PutPrivateData(centralBankCollection, centralBank.ID, centralBankAccountAsBytes)
 	if err != nil {
 		return fmt.Errorf("failed to update central bank account: %v", err)
 	}
@@ -556,7 +568,7 @@ func sendMoneyToForexBank(ctx contractapi.TransactionContextInterface, centralBa
 	return amountInUSD, nil
 }
 
-func (s *SmartContract) ForexToCentralBankTransaction(ctx contractapi.TransactionContextInterface, transactionID string, forexBankId string) error {
+func (s *SmartContract) ForexToCentralBankTransaction(ctx contractapi.TransactionContextInterface, transactionID string) error {
 	// Get the transaction from the pendingTransaction collection
 	transactionAsBytes, err := ctx.GetStub().GetPrivateData(pendingForexToCentralBankTransactionCollection, transactionID)
 	if err != nil {
@@ -573,56 +585,41 @@ func (s *SmartContract) ForexToCentralBankTransaction(ctx contractapi.Transactio
 		return fmt.Errorf("failed to unmarshal transaction: %v", err)
 	}
 
-	// Get employee's bank account from the employee collection
-	employeeAsBytes, err := ctx.GetStub().GetPrivateData(employeeCollection, transaction.PayeeID)
-	if err != nil {
-		return fmt.Errorf("failed to get employee from employee collection: %v", err)
-	}
-	if employeeAsBytes == nil {
-		return fmt.Errorf("employee not found in employee collection: %s", transaction.PayeeID)
-	}
 
-	// Unmarshal the employee
-	var employee Employee
-	err = json.Unmarshal(employeeAsBytes, &employee)
-	if err != nil {
-		return fmt.Errorf("failed to unmarshal employee: %v", err)
-	}
+	// // Get the central bank's bank account from the bank account collection
+	// centralBankAsBytes, err := ctx.GetStub().GetPrivateData(centralBankCollection, transaction.PayeeCentralBankID)
+	// if err != nil {
+	// 	return fmt.Errorf("failed to get central bank from central bank collection: %v", err)
+	// }
+	// if centralBankAsBytes == nil {
+	// 	return fmt.Errorf("central bank not found in central bank collection: %s", transaction.PayeeCentralBankID)
+	// }
 
-	// Get the central bank's bank account from the bank account collection
-	centralBankAsBytes, err := ctx.GetStub().GetPrivateData(centralBankCollection, employee.Location+"CentralBank")
-	if err != nil {
-		return fmt.Errorf("failed to get central bank from central bank collection: %v", err)
-	}
-	if centralBankAsBytes == nil {
-		return fmt.Errorf("central bank not found in central bank collection: %s", employee.Location+"CentralBank")
-	}
+	// // Unmarshal the central bank
+	// var centralBank CentralBank
+	// err = json.Unmarshal(centralBankAsBytes, &centralBank)
+	// if err != nil {
+	// 	return fmt.Errorf("failed to unmarshal central bank: %v", err)
+	// }
 
-	// Unmarshal the central bank
-	var centralBank CentralBank
-	err = json.Unmarshal(centralBankAsBytes, &centralBank)
-	if err != nil {
-		return fmt.Errorf("failed to unmarshal central bank: %v", err)
-	}
+	// // Get the forex bank's bank account from the bank account collection
+	// forexBankAsBytes, err := ctx.GetStub().GetPrivateData(forexBankCollection, forexBankId)
+	// if err != nil {
+	// 	return fmt.Errorf("failed to get forex bank from forex bank collection: %v", err)
+	// }
+	// if forexBankAsBytes == nil {
+	// 	return fmt.Errorf("forex bank not found in forex bank collection: %s", forexBankId)
+	// }
 
-	// Get the forex bank's bank account from the bank account collection
-	forexBankAsBytes, err := ctx.GetStub().GetPrivateData(forexBankCollection, forexBankId)
-	if err != nil {
-		return fmt.Errorf("failed to get forex bank from forex bank collection: %v", err)
-	}
-	if forexBankAsBytes == nil {
-		return fmt.Errorf("forex bank not found in forex bank collection: %s", forexBankId)
-	}
-
-	// Unmarshal the forex bank
-	var forexBank Bank
-	err = json.Unmarshal(forexBankAsBytes, &forexBank)
-	if err != nil {
-		return fmt.Errorf("failed to unmarshal forex bank: %v", err)
-	}
+	// // Unmarshal the forex bank
+	// var forexBank Bank
+	// err = json.Unmarshal(forexBankAsBytes, &forexBank)
+	// if err != nil {
+	// 	return fmt.Errorf("failed to unmarshal forex bank: %v", err)
+	// }
 
 	// Send money from the forex bank's bank account to the central bank
-	transaction.AmountReceived, err = sendMoneyFromForexToCentralBank(ctx, forexBank.ID, centralBank.ID, transaction.AmountReceived)
+	transaction.AmountReceived, err = sendMoneyFromForexToCentralBank(ctx, transaction.PayeeCentralBankID, transaction.AmountReceived)
 	if err != nil {
 		return fmt.Errorf("failed to send money to central bank: %v", err)
 	}
@@ -648,7 +645,7 @@ func (s *SmartContract) ForexToCentralBankTransaction(ctx contractapi.Transactio
 	return nil
 }
 
-func sendMoneyFromForexToCentralBank(ctx contractapi.TransactionContextInterface, forexBankID string, centralBankID string, amount float64) (float64, error) {
+func sendMoneyFromForexToCentralBank(ctx contractapi.TransactionContextInterface, centralBankID string, amount float64) (float64, error) {
 	// Get the central bank's bank account from the bank account collection
 	centralBankAsBytes, err := ctx.GetStub().GetPrivateData(centralBankCollection, centralBankID)
 	if err != nil {
@@ -666,12 +663,12 @@ func sendMoneyFromForexToCentralBank(ctx contractapi.TransactionContextInterface
 	}
 
 	// Get the forex bank's bank account from the bank account collection
-	forexBankAsBytes, err := ctx.GetStub().GetPrivateData(forexBankCollection, forexBankID)
+	forexBankAsBytes, err := ctx.GetStub().GetPrivateData(forexBankCollection, "ForexBank")
 	if err != nil {
 		return 0.0, fmt.Errorf("failed to get forex bank account from forex bank collection: %v", err)
 	}
 	if forexBankAsBytes == nil {
-		return 0.0, fmt.Errorf("forex bank account not found in forex bank collection: %s", forexBankID)
+		return 0.0, fmt.Errorf("forex bank account not found in forex bank collection: %s", "ForexBank")
 	}
 
 	// Unmarshal the forex bank
@@ -707,7 +704,7 @@ func sendMoneyFromForexToCentralBank(ctx contractapi.TransactionContextInterface
 
 	// Deduct 99% of the amount from the forex bank's bank account
 	// 1% is the fee charged by the forex bank
-	forexBank.Balance -= 99*amountInCentralBankCurrency/100
+	forexBank.Balance -= 99*amount/100
 	forexBankAsBytes, err = json.Marshal(forexBank)
 	if err != nil {
 		return 0.0, fmt.Errorf("failed to marshal forex bank account: %v", err)
@@ -749,29 +746,14 @@ func (s *SmartContract) CentralBankToBankTransaction(ctx contractapi.Transaction
 		return fmt.Errorf("failed to unmarshal transaction: %v", err)
 	}
 
-	// Get the employee's bank account from the employee collection
-	employeeAsBytes, err := ctx.GetStub().GetPrivateData(employeeCollection, transaction.PayeeID)
-	if err != nil {
-		return fmt.Errorf("failed to get employee from employee collection: %v", err)
-	}
-	if employeeAsBytes == nil {
-		return fmt.Errorf("employee not found in employee collection: %s", transaction.PayeeID)
-	}
-
-	// Unmarshal the employee
-	var employee Employee
-	err = json.Unmarshal(employeeAsBytes, &employee)
-	if err != nil {
-		return fmt.Errorf("failed to unmarshal employee: %v", err)
-	}
 
 	// Get the employee's bank account from the bank account collection
-	bankAccountAsBytes, err := ctx.GetStub().GetPrivateData(bankAccountCollection, employee.BankAccountID+employee.BankID)
+	bankAccountAsBytes, err := ctx.GetStub().GetPrivateData(bankAccountCollection,transaction.PayeeID)
 	if err != nil {
 		return fmt.Errorf("failed to get bank account from bank account collection: %v", err)
 	}
 	if bankAccountAsBytes == nil {
-		return fmt.Errorf("bank account not found in bank account collection: %s", employee.BankAccountID)
+		return fmt.Errorf("bank account not found in bank account collection: %s", transaction.PayeeID)
 	}
 
 	// Unmarshal the bank account
@@ -782,7 +764,7 @@ func (s *SmartContract) CentralBankToBankTransaction(ctx contractapi.Transaction
 	}
 
 	// Send money from the central bank's bank account to the bank
-	err = sendMoneyToBank(ctx, employee.Location+"CentralBank", bankAccount.ID+bankAccount.BankID, transaction.AmountReceived)
+	err = sendMoneyToBank(ctx, transaction.PayeeCentralBankID, bankAccount.ID+bankAccount.BankID, transaction.AmountReceived)
 	if err != nil {
 		return fmt.Errorf("failed to send money to bank: %v", err)
 	}
@@ -1155,14 +1137,44 @@ func (s *SmartContract) GetAccountBalance(ctx contractapi.TransactionContextInte
 	return account.Balance, nil
 }
 
-func (s *SmartContract) ReadPendingTransactionsByCentralBankID(ctx contractapi.TransactionContextInterface, bankID string) ([]*Transaction, error) {
-	queryString1 := fmt.Sprintf("{\"selector\":{\"PayerCentralBankID\":\"%v\"}}", bankID)
-	queryString2 := fmt.Sprintf("{\"selector\":{\"PayeeCentralBankID\":\"%v\"}}", bankID)
-	// queryString := fmt.Sprintf(`{"selector":{"$and":[{"PayerCentralBankID":{"$regex":"%s$"}}]}}`, bankID)
-	return s.getQueryResultForQueryStringCBPendingTxn(ctx, queryString1, queryString2)
+func (s* SmartContract) ReadPendingForexTransactions(ctx contractapi.TransactionContextInterface) ([]*Transaction, error) {
+	result ,err := ctx.GetStub().GetPrivateDataByRange(pendingForexToCentralBankTransactionCollection, "", "")
+	if err != nil {
+		return nil, fmt.Errorf("failed to get pending forex transactions: %v", err)
+	}
+	defer result.Close()
+
+	var transactions []*Transaction
+	for result.HasNext() {
+		response, err := result.Next()
+		if err != nil {
+			return nil, err
+		}
+		var transaction Transaction
+		err = json.Unmarshal(response.Value, &transaction)
+		if err != nil {
+			return nil, err
+		}
+		transactions = append(transactions, &transaction)
+	}
+	return transactions, nil
 }
 
-func (s *SmartContract) getQueryResultForQueryStringCBPendingTxn(ctx contractapi.TransactionContextInterface, queryString1 string, queryString2 string) ([]*Transaction, error) {
+func (s *SmartContract) ReadPendingTransactionsToForexByCentralBankID(ctx contractapi.TransactionContextInterface, bankID string) ([]*Transaction, error) {
+	queryString1 := fmt.Sprintf("{\"selector\":{\"PayerCentralBankID\":\"%v\"}}", bankID)
+	// queryString2 := fmt.Sprintf("{\"selector\":{\"PayeeCentralBankID\":\"%v\"}}", bankID)
+	// queryString := fmt.Sprintf(`{"selector":{"$and":[{"PayerCentralBankID":{"$regex":"%s$"}}]}}`, bankID)
+	return s.getQueryResultForQueryStringCBToForexPendingTxn(ctx, queryString1)
+}
+
+func (s *SmartContract) ReadPendingTransactionsToBankByCentralBankID(ctx contractapi.TransactionContextInterface, bankID string) ([]*Transaction, error) {
+	// queryString1 := fmt.Sprintf("{\"selector\":{\"PayerCentralBankID\":\"%v\"}}", bankID)
+	queryString2 := fmt.Sprintf("{\"selector\":{\"PayeeCentralBankID\":\"%v\"}}", bankID)
+	// queryString := fmt.Sprintf(`{"selector":{"$and":[{"PayerCentralBankID":{"$regex":"%s$"}}]}}`, bankID)
+	return s.getQueryResultForQueryStringCBToBankPendingTxn(ctx, queryString2)
+}
+
+func (s *SmartContract) getQueryResultForQueryStringCBToForexPendingTxn(ctx contractapi.TransactionContextInterface, queryString1 string) ([]*Transaction, error) {
 
 	resultsIterator, err := ctx.GetStub().GetPrivateDataQueryResult(pendingCentralBankToForexTransactionCollection, queryString1)
 	if err != nil {
@@ -1186,6 +1198,11 @@ func (s *SmartContract) getQueryResultForQueryStringCBPendingTxn(ctx contractapi
 
 		results = append(results, asset)
 	}
+	return results, nil
+}
+func (s *SmartContract) getQueryResultForQueryStringCBToBankPendingTxn(ctx contractapi.TransactionContextInterface, queryString2 string) ([]*Transaction, error) {
+
+	results := []*Transaction{}
 	resultsIterator2, err := ctx.GetStub().GetPrivateDataQueryResult(pendingCentralBanktoBankTransactionCollection, queryString2)
 	if err != nil {
 		return nil, err

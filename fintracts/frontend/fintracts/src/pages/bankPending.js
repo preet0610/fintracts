@@ -42,15 +42,15 @@ const BankPending = () => {
               <p>Amount: {transaction.AmountReceived}</p>
               <p>Recipient: {transaction.PayerCentralBankID}</p>
               <button
-                onClick={async () => {
+                onClick={() => {
                   // Approve the transaction
-                  const response = await axios.post(
+                  const response = axios.post(
                     "http://localhost:3002/invoke",
                     new URLSearchParams([
                       ["", ""],
                       ["channelid", "bankchannel"],
                       ["chaincodeid", "bank"],
-                      ["function", "AddPendingTransaction"],
+                      ["function", "BankToCentralBankTransaction"],
                       ["args", transaction.TransactionId],
                       ["args", transaction.PayerID],
                       ["args", transaction.AmountReceived],
@@ -65,32 +65,32 @@ const BankPending = () => {
                   );
                   console.log("Response:", response);
                   console.log(JSON.stringify(transaction));
-                  // const response2 = await axios.post(
-                  //   "http://localhost:3000/invoke",
-                  //   new URLSearchParams([
-                  //     ["", ""],
-                  //     ["channelid", "bankchannel"],
-                  //     ["chaincodeid", "emp"],
-                  //     ["function", "DeletePendingTransaction"],
-                  //     ["args", transaction.TransactionId],
-                  //   ])
-                  // );
-                  // console.log("Response:", response2);
-                  // window.location.reload();
+                  const response2 = axios.post(
+                    "http://localhost:3000/invoke",
+                    new URLSearchParams([
+                      ["", ""],
+                      ["channelid", "bankchannel"],
+                      ["chaincodeid", "emp"],
+                      ["function", "DeletePendingTransaction"],
+                      ["args", transaction.TransactionId],
+                    ])
+                  );
+                  console.log("Response:", response2);
+                  window.location.reload();
                   console.log(
                     "Approving transaction:",
                     transaction.TransactionId
                   );
-                  const response3 = await axios.post(
-                    "http://localhost:3002/invoke",
-                    new URLSearchParams([
-                      ["", ""],
-                      ["channelid", "bankchannel"],
-                      ["chaincodeid", "bank"],
-                      ["function", "BankToCentralBankTransaction"],
-                      ["args", transaction.TransactionId],
-                    ])
-                  );
+                  //   const response3 = axios.post(
+                  //     "http://localhost:3002/invoke",
+                  //     new URLSearchParams([
+                  //       ["", ""],
+                  //       ["channelid", "bankchannel"],
+                  //       ["chaincodeid", "bank"],
+                  //       ["function", "BankToCentralBankTransaction"],
+                  //       ["args", transaction.TransactionId],
+                  //     ])
+                  //   );
                   //   console.log("Response:", response3);
                 }}
               >

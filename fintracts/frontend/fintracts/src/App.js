@@ -15,6 +15,7 @@ import BankPending from "./pages/bankPending";
 import CreateBankAcc from "./pages/createBankAcc";
 import ViewBalance from "./pages/veiwBalance";
 import CentralBankPending from "./pages/centralBankPending";
+import ForexPending from "./pages/forexPending";
 import "./App.css";
 
 const App = () => {
@@ -37,6 +38,7 @@ const App = () => {
       <Route path="/bank-pending-txns" element={<BankPending />} />
       <Route path="/create-bank-account" element={<CreateBankAcc />} />
       <Route path="/veiw-balance" element={<ViewBalance />} />
+      <Route path="/forex-pending-txns" element={<ForexPending />} />
       <Route
         path="/central-bank-pending-txns"
         element={<CentralBankPending />}

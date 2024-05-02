@@ -6,7 +6,7 @@ To start using the app follow the given instructions
 
 ```bash
 ./network.sh down
-./network.sh up -cs -s couchdb
+./network.sh up -ca -s couchdb
 ./network.sh createChannel -c bankchannel
 ./network.sh deployCC -ccn bank -ccp ../fintracts/chaincode-go-bank/ -ccl go -ccep "OR('Org1MSP.peer','Org2MSP.peer')" -cccg ../fintracts/chaincode-go-bank/collections_config.json -c bankchannel
 ./network.sh deployCC -ccn emp -ccp ../fintracts/chaincode-go-emp/ -ccl go -ccep "OR('Org1MSP.peer','Org2MSP.peer')" -cccg ../fintracts/chaincode-go-bank/collections_config.json -c bankchannel
